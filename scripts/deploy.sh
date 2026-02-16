@@ -4,16 +4,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-NAMESPACE="mcpprimo"
-
-if [ $# -lt 2 ]; then
-  echo "Usage: $0 <PRIMO_API_KEY> <INGRESS_HOST>" >&2
-  echo "Example: $0 your-api-key mcpprimo.discovery.cs.vt.edu" >&2
+if [ $# -lt 3 ]; then
+  echo "Usage: $0 <NAMESPACE> <PRIMO_API_KEY> <INGRESS_HOST>" >&2
+  echo "Example: $0 mcpprimo your-api-key mcpprimo.discovery.cs.vt.edu" >&2
   exit 1
 fi
 
-PRIMO_API_KEY="$1"
-INGRESS_HOST="$2"
+NAMESPACE="$1"
+PRIMO_API_KEY="$2"
+INGRESS_HOST="$3"
 
 echo "Creating/updating primomcp-secret in namespace $NAMESPACE..."
 kubectl create secret generic primomcp-secret \

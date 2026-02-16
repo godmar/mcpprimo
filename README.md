@@ -46,9 +46,9 @@ docker run -e PRIMO_API_KEY=your-key \
 2. Deploy using the helper script:
 
 ```bash
-./scripts/deploy.sh <PRIMO_API_KEY> <INGRESS_HOST>
+./scripts/deploy.sh <NAMESPACE> <PRIMO_API_KEY> <INGRESS_HOST>
 # Example:
-./scripts/deploy.sh your-primo-api-key mcpprimo.discovery.cs.vt.edu
+./scripts/deploy.sh mcpprimo your-primo-api-key mcpprimo.discovery.cs.vt.edu
 ```
 
 The script creates the K8s secret from the CLI argument (keeping it out of version control), applies all manifests, substitutes the ingress hostname, and waits for the rollout to complete.
