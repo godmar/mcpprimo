@@ -14,6 +14,8 @@ spec:
       labels:
         app: primomcp
     spec:
+      imagePullSecrets:
+        - name: __IMAGE_PULL_SECRET__
       containers:
         - name: primomcp
           image: __IMAGE__

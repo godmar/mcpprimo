@@ -15,7 +15,7 @@ source "$ENV_FILE"
 set +a
 
 # Validate required variables
-for var in NAMESPACE PRIMO_API_KEY INGRESS_HOST CONTAINER_REGISTRY; do
+for var in NAMESPACE PRIMO_API_KEY INGRESS_HOST CONTAINER_REGISTRY IMAGE_PULL_SECRET; do
   if [ -z "${!var:-}" ]; then
     echo "Error: $var is not set in $ENV_FILE" >&2
     exit 1
@@ -36,7 +36,7 @@ echo "Applying K8s manifests..."
 kubectl apply -n "$NAMESPACE" -f "$PROJECT_DIR/k8s/configmap.yaml"
 kubectl apply -n "$NAMESPACE" -f "$PROJECT_DIR/k8s/service.yaml"
 
-sed "s|__IMAGE__|$IMAGE|" "$PROJECT_DIR/k8s/deployment.yaml" \
+sed -e "s|__IMAGE__|$IMAGE|" -e "s|__IMAGE_PULL_SECRET__|$IMAGE_PULL_SECRET|" "$PROJECT_DIR/k8s/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 
 sed "s|__INGRESS_HOST__|$INGRESS_HOST|" "$PROJECT_DIR/k8s/ingress.yaml" \
