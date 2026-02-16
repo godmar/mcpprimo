@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: primomcp
-          image: primomcp:latest
+          image: __IMAGE__
           ports:
             - containerPort: 3000
           envFrom:

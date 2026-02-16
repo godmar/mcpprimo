@@ -4,17 +4,29 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-if [ $# -lt 3 ]; then
-  echo "Usage: $0 <NAMESPACE> <PRIMO_API_KEY> <INGRESS_HOST>" >&2
-  echo "Example: $0 mcpprimo your-api-key mcpprimo.discovery.cs.vt.edu" >&2
+# Load .env from project root
+ENV_FILE="$PROJECT_DIR/.env"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "Error: $ENV_FILE not found. Copy .env.sample to .env and fill in values." >&2
   exit 1
 fi
+set -a
+source "$ENV_FILE"
+set +a
 
-NAMESPACE="$1"
-PRIMO_API_KEY="$2"
-INGRESS_HOST="$3"
+# Validate required variables
+for var in NAMESPACE PRIMO_API_KEY INGRESS_HOST CONTAINER_REGISTRY; do
+  if [ -z "${!var:-}" ]; then
+    echo "Error: $var is not set in $ENV_FILE" >&2
+    exit 1
+  fi
+done
 
-echo "Creating/updating primomcp-secret in namespace $NAMESPACE..."
+IMAGE="$CONTAINER_REGISTRY/primomcp:latest"
+
+echo "Deploying to namespace $NAMESPACE..."
+
+echo "Creating/updating primomcp-secret..."
 kubectl create secret generic primomcp-secret \
   --namespace="$NAMESPACE" \
   --from-literal=PRIMO_API_KEY="$PRIMO_API_KEY" \
@@ -22,10 +34,12 @@ kubectl create secret generic primomcp-secret \
 
 echo "Applying K8s manifests..."
 kubectl apply -n "$NAMESPACE" -f "$PROJECT_DIR/k8s/configmap.yaml"
-kubectl apply -n "$NAMESPACE" -f "$PROJECT_DIR/k8s/deployment.yaml"
 kubectl apply -n "$NAMESPACE" -f "$PROJECT_DIR/k8s/service.yaml"
 
-sed "s/__INGRESS_HOST__/$INGRESS_HOST/" "$PROJECT_DIR/k8s/ingress.yaml" \
+sed "s|__IMAGE__|$IMAGE|" "$PROJECT_DIR/k8s/deployment.yaml" \
+  | kubectl apply -n "$NAMESPACE" -f -
+
+sed "s|__INGRESS_HOST__|$INGRESS_HOST|" "$PROJECT_DIR/k8s/ingress.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 
 echo "Waiting for rollout..."

@@ -42,16 +42,29 @@ docker run -e PRIMO_API_KEY=your-key \
 
 ## Kubernetes Deployment
 
-1. Edit `k8s/configmap.yaml` with your institution's Primo settings.
-2. Deploy using the helper script:
+1. Copy `.env.sample` to `.env` and fill in your values:
 
 ```bash
-./scripts/deploy.sh <NAMESPACE> <PRIMO_API_KEY> <INGRESS_HOST>
-# Example:
-./scripts/deploy.sh mcpprimo your-primo-api-key mcpprimo.discovery.cs.vt.edu
+cp .env.sample .env
+# Edit .env with your NAMESPACE, PRIMO_API_KEY, INGRESS_HOST, CONTAINER_REGISTRY
 ```
 
-The script creates the K8s secret from the CLI argument (keeping it out of version control), applies all manifests, substitutes the ingress hostname, and waits for the rollout to complete.
+2. Edit `k8s/configmap.yaml` with your institution's Primo settings.
+
+3. Build and push the Docker image:
+
+```bash
+docker build -t $CONTAINER_REGISTRY/primomcp:latest .
+docker push $CONTAINER_REGISTRY/primomcp:latest
+```
+
+4. Deploy:
+
+```bash
+./scripts/deploy.sh
+```
+
+The script reads `.env`, creates the K8s secret (keeping credentials out of version control), substitutes the image and ingress host into the manifests, and waits for the rollout to complete.
 
 ## MCP Tool: `primo_search`
 
