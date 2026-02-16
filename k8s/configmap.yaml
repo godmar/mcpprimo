@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: primomcp-config
+data:
+  PRIMO_BASE_URL: "https://api-na.hosted.exlibrisgroup.com"
+  PRIMO_VID: ""
+  PRIMO_TAB: ""
+  PRIMO_SCOPE: ""
+  PRIMO_INST: ""
+  PORT: "3000"

@@ -1,0 +1,197 @@
+<application xmlns="http://wadl.dev.java.net/2009/02" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<doc title="Primo"/>
+	<grammars/>
+	<resources base="https://api-eu.hosted.exlibrisgroup.com">
+		<resource path="/primo/v1/search">
+			<method name="GET">
+				<doc title="Primo Search">
+This service implements Primo&apos;s main search service and returns a [list of results|https://developers.exlibrisgroup.com/primo/apis/search-output] based on the specified search query and also information about the total results number, the list of the facets for all exists results etc.).
+
+Note: Hosted customers can use this API by specifying the API-key, but on-premises customers must specify an institution code and add a valid guest JWT to the header of the request. 
+To get a valid guest JWT, please use the Guest JWT Creator Rest API (see [JWT Rest API|https://developers.exlibrisgroup.com/primo/apis/jwt]).
+
+
+Basic URL example for hosted customers:
+&lt;api-gateway-url&gt;/primo/v1/search?vid=Auto1&amp;tab=default_tab&amp;scope=default_scope&amp;q=any,contains,water&amp;apikey=&lt;apikey&gt;
+
+
+Basic URL example for on-premises customers:
+&lt;base-local-url&gt;/primo_library/libweb/webservices/rest/primo-explore/v1/pnxs?vid=&lt;view id&gt;&amp;tab=&lt;tab&gt;&amp;scope=&lt;scope&gt;&amp;q=any,contains,water&amp;inst=&lt;the instisution code&gt;
+
+
+The API key (which is required for hosted customers only) is used to access this API. For information on getting the API key, see [Getting Started with Primo REST APIs|https://developers.exlibrisgroup.com/primo/apis]
+
+Note: The Primo search API has a hardcoded offset limitation parameter of 5000.</doc>
+				<request>
+					<param name="vid" style="query" type="xs:string">
+						<doc>The view ID. 
+Example: vid=API_GUEST_INST:API_GUEST_INST</doc>
+					</param>
+					<param name="tab" style="query" type="xs:string">
+						<doc>The name of the tab.
+Example: tab=LibraryCatalog</doc>
+					</param>
+					<param name="scope" style="query" type="xs:string">
+						<doc>The scope name.
+Example: scope=MyInstitution</doc>
+					</param>
+					<param name="q" style="query" type="xs:string">
+						<doc>The query string that you want to use to perform a search. 
+The query string uses the following format:
+    q=&lt;field_1&gt;,&lt;precision_1&gt;,&lt;value_1&gt;[[,&lt;operator_1&gt;];&lt;field_n&gt;,&lt;precision_n&gt;,&lt;value_n&gt;...]
+*    field - The data field that you want to search within. The following fields are valid: any (for any field), title, creator (for author), sub (for subject), and usertag (for tag).
+*    precision - The precision operation that you want to apply to the field. The following precision operators are valid: exact (value must match the data in the field exactly), begins_with (the value must be found at the beginning of the field), and contains (the value must be found anywhere in the field).
+*    value - The search terms, which can be a word, phrase, or exact phrase (group of words enclosed by quotes), and can include the following logical operators: AND, OR, and NOT. For more information regarding search terms, see [Performing Basic Searches|https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/New_Primo_User_Interface/End_User_Help/010Performing_Basic_Searches].
+*    operator - When specifying multiple search fields for advanced searches, this parameter applies the following logical operations between fields: AND (specified values must be found in both fields), OR (specified values must be found in at least one of the fields), NOT (the specified value of the next field must not be found). If no operator is specified, the system defaults to AND.
+
+Note: Multiple fields are delimited by a semicolon.
+Limitation: The value must not include a semicolon character.
+
+In the following example, the system searches for all records in which the word home is found anywhere within the record&apos;s title:
+    q=title,contains,home
+
+In the following example, the system searches for all records in which the title field contains the words pop and music and the subject field contains the word korean:
+    q=title,contains,pop music,AND;sub,contains,korean</doc>
+					</param>
+					<param name="qInclude" style="query" default="" type="xs:string">
+						<doc>Filters the results by the facets that you want to include. The logical AND operation is applied between the facets.
+This filter uses the following format:
+    qInclude=&lt;facet_category_1&gt;,exact,&lt;facet_name_1&gt;[|,|&lt;facet_category_n&gt;,exact,&lt;facet_name_n&gt;...]
+
+Note: Multiple categories are delimited by the following string of characters: |,|
+
+*    facet_category - The facet category that you want to include. The following categories are valid: facet_rtype (Resources Type), facet_topic (Subject), facet_creator (Author), facet_tlevel (Availability), facet_domain (Collection), facet_library (library name), facet_lang (language), facet_lcc (LCC classification), facet_searchcreationdate (Creation date).
+*    facet_name - The name of the facet to include (such as Journals if facet_rtype was selected).
+* For retrieving cited/citing references, you may use: "qInclude=[facet_citing/facet_citedby],exact,cdi_[citation key]". where the [citation key] is in the format: "FETCH-...." and is taken from the 'citedby'/'cites'/'citing' fields, in a response for search API query that includes results with citations.
+* For filtering for specific dates, you may use: "qInclude=facet_searchcreationdate,exact,[{START_YEAR} TO {END_YEAR}]"
+</doc>
+
+
+
+					</param>
+					<param name="qExclude" style="query" default="" type="xs:string">
+						<doc>Filters the results by the facets that you want to exclude. The logical AND operation is applied between the facets.
+This parameter uses the following format:
+    qExclude=&lt;facet_category_1&gt;,exact,&lt;facet_name_1&gt;[|,|&lt;facet_category_n&gt;,exact,&lt;facet_name_n&gt;...]
+
+Note: Multiple categories are delimited by the following string of characters: |,|
+
+*    facet_category - The facet category that you want to exclude. The following categories are valid: facet_rtype (Resources Type), facet_topic (Subject), facet_creator (Author), facet_tlevel (Availability), facet_domain (Collection), facet_library (library name), facet_lang (language), facet_lcc (LCC classification)
+*    facet_name - The name of the facet to exclude (such as Journals if facet_rtype was selected).</doc>
+					</param>
+					<param name="multiFacets" style="query" default="" repeating="true" type="xs:string">
+						<doc>Filter the results by including and excluding facets. The main difference between this parameter and the qInclude and qExclude parameters is that this parameter uses OR logic between facet values and AND logic between facet categories. This parameter uses the following format:multiFacets=&lt;facet_category_1&gt;,&lt;facet_operator_1&gt;,&lt;facet_name_1&gt;[|,|&lt;facet_category_n&gt;,&lt;facet_operator_n&gt;,&lt;facet_name_n&gt;...]
+
+*    facet_category - The facet category that you want to include or exclude. The following categories are valid: facet_rtype (Resources Type), facet_topic (Subject), facet_creator (Author), facet_tlevel (Availability), facet_domain (Collection), facet_library (library name), facet_lang (language), facet_lcc (LCC classification)
+*    facet_operator - The operator to apply to the facet. The valid values are include or exclude.
+*    facet_name - The name of the facet to exclude (such as Journals if facet_rtype was selected).
+
+Note: Multiple categories are delimited by the following string of characters: |,|
+
+Example: multiFacets=facet_rtype,include,books|,|facet_lang,exclude,spa</doc>
+					</param>
+					<param name="journals" style="query" default="" type="xs:string">
+						<doc>The query string used to search specifically for journals. (Relevant for Alma customers only). This parameter uses the following format:
+journals=&lt;operator&gt;,&lt;value&gt;
+
+*    type - The type of search to perform. The valid values are any (search using free text or ISSN) or letter (search using the first letter of the journal).
+*    value - Depending on the search type, the search string can be free text, ISSN, or a letter.
+
+The following example returns all journals that have the word nature in any of its data fields: journals=any,natureThe following example returns all journals that begin with the letter N: journals=letter,N</doc>
+					</param>
+
+					<param name="newspapersSearch" style="query" default="" type="xs:boolean">
+						<doc>Indicates whether Newspapers search is enabled. The valid values are true or false.
+To perform a Newspapers search, add these 2 parameters: newspapersSearch=true and pcAvailability=true.  </doc>
+					</param>
+					<param name="newspapersActive" style="query" default="true" type="xs:boolean">
+						<doc>Indicates whether Newspapers search is active. The valid values are true or false.</doc>
+					</param>
+
+				<param name="pcAvailability" style="query" default="true" type="xs:boolean">
+						<doc>Indicates whether PC records that do not have full text are displayed in the results. The valid values are true (display all records even if they do not have full text) or false (display full text records only). The default value for Primo VE is false.
+Example: pcAvailability=false.</doc>
+					</param>
+					<param name="databases" style="query" default="" type="xs:string">
+						<doc>The query string used to search specifically for databases. (Relevant for Alma customers only). This parameter uses the following format:
+databases=&lt;operator&gt;,&lt;value&gt;
+
+*    type - The type of search to perform. The valid values are any (search using free text or ISSN) or letter (search using the first letter of the journal - this is only supported in classic Primo and not in Primo VE).
+*    value - Depending on the search type, the search string can be free text, ISSN, or a letter.
+The following example returns all databases that have the word law in any of its data fields: journals=any,law
+The following example returns all databases that begin with the letter L: journals=letter,L</doc>
+					</param>
+					<param name="lang" style="query" default="eng" type="xs:string">
+						<doc>The Language. 
+For Primo - use the locale format language. 
+For example: lang=en_US. 
+For Primo VE - use the two letters format language. 
+For example: lang=en.</doc>
+					</param>
+					<param name="fromDate" style="query" default="" type="xs:string">
+						<doc>This parameter gives results which updated in the library data base from certain date. . 
+The following date example represent 12.1.2018 15:21:28 Example: fromDate=20180128152128.</doc>
+					</param>
+					<param name="offset" style="query" default="0" type="xs:int">
+						<doc>The offset of the results from which to start displaying the results.
+
+The following example skips the first bulk and displays the remaining results up to the specified limit: offset=10.
+
+The recomended maximim offset is 2000.</doc>
+					</param>
+					<param name="limit" style="query" default="10" type="xs:int">
+						<doc>The maximum number of results in the response
+Example: limit=5.
+The recomended maximim limit is 50.</doc>
+					</param>
+					<param name="sort" style="query" default="rank" type="xs:string">
+						<doc>The type of sort to perform on the results, which can be based on relevance or a specific field: rank, title, author, date, date_d (Date-newest) and date_a (Date-oldest).
+Example: sort=rank</doc>
+					</param>
+					<param name="personalization" style="query" default="" type="xs:string">
+						<doc>The disciplines to apply to your search query. (Relevant for Primo Central searches only).When applied, records marked with the specified disciplines are boosted in the results.
+The valid disciplines are defined in the Personalize Your Results Disciplines mapping table in the Back Office. This parameter uses the following format: 
+    personalization=&lt;discipline_1&gt;[;&lt;discipline_2&gt;...;&lt;discipline_5]
+
+Note: Multiple disciplines are delimited by a semicolon. A maximum of five disciplines are supported. You cannot specify a discipline and its sub-discipline, but you can specify either the discipline or up to five of its sub-disciplines.
+
+Example: personalization=biology;chemistry;medicine</doc>
+					</param>
+					<param name="getMore" style="query" default="0" type="xs:string">
+						<doc>Relevant for searches in Metalib. 
+Indicates whether to expand the number of results in Metalib searches. The valid values are 0 (false) or 1 (true).
+Example: getMore=0.</doc>
+					</param>
+					<param name="conVoc" style="query" default="true" type="xs:boolean">
+						<doc>Indicates whether the controlled vocabulary service is enabled to add synonyms to queries. The valid values are true or false.
+Example: conVoc=true.</doc>
+					</param>					
+					<param name="inst" style="query" type="xs:string">
+						<doc>The Institution code, which is required for on-premises (non-hosted) Primo customers only.
+
+Note: On-premises customers must also add a valid guest JWT to the header of the request. To get a valid guest JWT, To get a valid guest JWT, please use the [Guest JWT Creator Rest API|https://developers.exlibrisgroup.com/primo/apis/jwt]..
+
+Example: inst=API_GUEST_INST</doc>
+					</param>
+					<param name="skipDelivery" style="query" default="true" type="xs:boolean">
+						<doc>Indicates whether to skip the delivery call (relevant only for Primo VE). When set to 'true', no delivery will be sent in the response, and the results should be displayed quicker.
+Example: skipDelivery=true.
+
+</doc>
+					</param>
+					<param name="disableSplitFacets" style="query" default="true" type="xs:boolean">
+						<doc>Indicates whether to retrieve facets or not (relevant only for Primo VE). When set to 'false' the facets won't be retrieved and the results should be displayed quicker.
+Example: disableSplitFacets=true.
+
+</doc>
+					</param>
+				</request>
+				<response>
+            <doc title="401">Unauthorized</doc>
+            <doc title="500">Internal Server Error</doc>
+					<representation mediaType="application/json"/>
+				</response>
+			</method>
+		</resource>
+	</resources>
+</application>

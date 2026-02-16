@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: primomcp
+  labels:
+    app: primomcp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: primomcp
+  template:
+    metadata:
+      labels:
+        app: primomcp
+    spec:
+      containers:
+        - name: primomcp
+          image: primomcp:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: primomcp-config
+            - secretRef:
+                name: primomcp-secret
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
