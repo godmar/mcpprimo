@@ -55,7 +55,13 @@ export async function searchPrimo(
     headers: { Accept: "application/json" },
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = { rawBody: text || "(empty response)" };
+  }
   const apiRemaining =
     response.headers.get("X-Exl-Api-Remaining") ?? undefined;
 
