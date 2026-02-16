@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: mcpprimo.discovery.cs.vt.edu
+    - host: __INGRESS_HOST__
       http:
         paths:
           - path: /
