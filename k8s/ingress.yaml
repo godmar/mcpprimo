@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: primomcp.example.com
+    - host: mcpprimo.discovery.cs.vt.edu
       http:
         paths:
           - path: /
