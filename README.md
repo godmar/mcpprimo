@@ -42,29 +42,41 @@ docker run -e PRIMO_API_KEY=your-key \
 
 ## Kubernetes Deployment
 
+The manifests in `k8s/` are managed with [kustomize](https://kustomize.io/) and
+deploy to the `vtlib` namespace (namespace, image, and ingress host are set in
+the committed manifests). Per-institution config and all secrets are kept out of
+version control: they live in `.env` and are rendered into gitignored kustomize
+generator inputs (`k8s/config.env`, `k8s/secret.env`, `k8s/dockerconfigjson`).
+
 1. Copy `.env.sample` to `.env` and fill in your values:
 
 ```bash
 cp .env.sample .env
-# Edit .env with your NAMESPACE, PRIMO_API_KEY, INGRESS_HOST, CONTAINER_REGISTRY
+# PRIMO_API_KEY, PRIMO_VID/TAB/SCOPE, CONTAINER_REGISTRY, REGISTRY_* (deploy token)
 ```
 
-2. Edit `k8s/configmap.yaml` with your institution's Primo settings.
-
-3. Build and push the Docker image:
+2. Build and push the Docker image:
 
 ```bash
-docker build -t $CONTAINER_REGISTRY/primomcp:latest .
-docker push $CONTAINER_REGISTRY/primomcp:latest
+./scripts/build.sh   # builds and pushes $CONTAINER_REGISTRY/primomcp:latest
 ```
 
-4. Deploy:
+3. Render the gitignored kustomize inputs from `.env`:
 
 ```bash
-./scripts/deploy.sh
+./scripts/gen-kustomize-inputs.sh
 ```
 
-The script reads `.env`, creates the K8s secret (keeping credentials out of version control), substitutes the image and ingress host into the manifests, and waits for the rollout to complete.
+4. Deploy with kustomize:
+
+```bash
+kubectl --kubeconfig endeavour.yaml apply -k k8s
+```
+
+Steps 3–4 are also wrapped by `./scripts/deploy.sh`, which renders the inputs,
+applies `k8s/` against `endeavour.yaml`, and waits for the rollout. Re-run
+`gen-kustomize-inputs.sh` whenever `.env` changes; otherwise `kubectl apply -k k8s`
+is self-contained.
 
 ## MCP Tool: `primo_search`
 

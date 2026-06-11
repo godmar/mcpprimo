@@ -1,58 +1,24 @@
 #!/usr/bin/env bash
+# Convenience wrapper: render .env -> kustomize inputs, then apply k8s/.
+# Equivalent to running scripts/gen-kustomize-inputs.sh followed by
+#   kubectl --kubeconfig endeavour.yaml apply -k k8s
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Load .env from project root
-ENV_FILE="$PROJECT_DIR/.env"
-if [ ! -f "$ENV_FILE" ]; then
-  echo "Error: $ENV_FILE not found. Copy .env.sample to .env and fill in values." >&2
+KUBECONFIG_FILE="${KUBECONFIG:-$PROJECT_DIR/endeavour.yaml}"
+if [ ! -f "$KUBECONFIG_FILE" ]; then
+  echo "Error: kubeconfig $KUBECONFIG_FILE not found." >&2
   exit 1
 fi
-set -a
-source "$ENV_FILE"
-set +a
 
-# Validate required variables
-for var in NAMESPACE PRIMO_API_KEY PRIMO_BASE_URL PRIMO_VID PRIMO_TAB PRIMO_SCOPE INGRESS_HOST CONTAINER_REGISTRY IMAGE_PULL_SECRET; do
-  if [ -z "${!var:-}" ]; then
-    echo "Error: $var is not set in $ENV_FILE" >&2
-    exit 1
-  fi
-done
+"$SCRIPT_DIR/gen-kustomize-inputs.sh"
 
-IMAGE="$CONTAINER_REGISTRY/primomcp:latest"
-
-echo "Deploying to namespace $NAMESPACE..."
-
-echo "Creating/updating primomcp-secret..."
-kubectl create secret generic primomcp-secret \
-  --namespace="$NAMESPACE" \
-  --from-literal=PRIMO_API_KEY="$PRIMO_API_KEY" \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-echo "Creating/updating primomcp-config..."
-kubectl create configmap primomcp-config \
-  --namespace="$NAMESPACE" \
-  --from-literal=PRIMO_BASE_URL="$PRIMO_BASE_URL" \
-  --from-literal=PRIMO_VID="$PRIMO_VID" \
-  --from-literal=PRIMO_TAB="$PRIMO_TAB" \
-  --from-literal=PRIMO_SCOPE="$PRIMO_SCOPE" \
-  --from-literal=PRIMO_INST="${PRIMO_INST:-}" \
-  --from-literal=PORT=3000 \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-echo "Applying K8s manifests..."
-kubectl apply -n "$NAMESPACE" -f "$PROJECT_DIR/k8s/service.yaml"
-
-sed -e "s|__IMAGE__|$IMAGE|" -e "s|__IMAGE_PULL_SECRET__|$IMAGE_PULL_SECRET|" "$PROJECT_DIR/k8s/deployment.yaml" \
-  | kubectl apply -n "$NAMESPACE" -f -
-
-sed "s|__INGRESS_HOST__|$INGRESS_HOST|" "$PROJECT_DIR/k8s/ingress.yaml" \
-  | kubectl apply -n "$NAMESPACE" -f -
+echo "Applying k8s/ ..."
+kubectl --kubeconfig "$KUBECONFIG_FILE" apply -k "$PROJECT_DIR/k8s"
 
 echo "Waiting for rollout..."
-kubectl rollout status -n "$NAMESPACE" deployment/primomcp
+kubectl --kubeconfig "$KUBECONFIG_FILE" rollout status -n vtlib deployment/primomcp
 
 echo "Deployment complete."

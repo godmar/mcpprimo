@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: vtlib
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+# config.env, secret.env, and dockerconfigjson are gitignored and rendered from
+# .env by scripts/gen-kustomize-inputs.sh. Run that once (and whenever .env
+# changes); afterwards `kubectl apply -k k8s` works on its own.
+configMapGenerator:
+  - name: primomcp-config
+    envs:
+      - config.env
+
+secretGenerator:
+  - name: primomcp-secret
+    envs:
+      - secret.env
+  - name: registry-secret
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=dockerconfigjson
+
+# Stable names so the Deployment references config/secret objects by fixed name
+# (imagePullPolicy: Always handles image rollouts).
+generatorOptions:
+  disableNameSuffixHash: true

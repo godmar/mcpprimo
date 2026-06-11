@@ -15,10 +15,10 @@ spec:
         app: primomcp
     spec:
       imagePullSecrets:
-        - name: __IMAGE_PULL_SECRET__
+        - name: registry-secret
       containers:
         - name: primomcp
-          image: __IMAGE__
+          image: container.cs.vt.edu/gback/registry/primomcp:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

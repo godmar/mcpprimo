@@ -2,3 +2,12 @@ node_modules/
 dist/
 .env
 *.tgz
+
+# Cluster kubeconfigs (contain access tokens)
+/endeavour.yaml
+/discovery.yaml
+
+# Kustomize generator inputs rendered from .env (scripts/gen-kustomize-inputs.sh)
+/k8s/config.env
+/k8s/secret.env
+/k8s/dockerconfigjson
